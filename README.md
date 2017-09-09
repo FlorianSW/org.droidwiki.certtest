@@ -1,0 +1,8 @@
+# Java Microsoft Windows native certificate selection
+This repository holds an example project of an implementation that uses JNA (Java Native Access) to get a certificate with the Windows-own certificate selection prompt (which is, e.g., used by Microsoft Internet Explorer when a client login certificate is needed to access a website). The implementation should be as generic as possible to be extended or modified very easily.
+This implementation, of course, is platform dependant and works on Windows operating systems only. It is tested on Windos 10 and Windows 7.
+
+# Why this prepository
+I was looking for an example implementation of how a Windows certificate selection dialog can be opened out of a Java application[1] and I haven't found a full example or HowTo to achieve exactly that. So I created my own example and want to share what I've achieved, so it may, or may not, be helpful or at least an inspiration of others who also look for something like that.
+[1] I could use the Java native Sun MSCAPI implementation, however, it tries to check, if a certificate has a private key, which may, or may not, depending on the CSP implementation, trigger a CSP (Cryptographic Service Provider) to ask the user for a PIN or a hardtoken, which is probably needed to access the private key of specific certificate in the store. However, my intention was to first ask the user for this information, once he really wanted to select this certificate.
+There may be other ways of doing that, however, this pretty well worked for my use case :)
