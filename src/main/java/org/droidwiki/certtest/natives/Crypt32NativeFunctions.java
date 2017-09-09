@@ -19,6 +19,7 @@ public class Crypt32NativeFunctions {
 	public final static Function CertFreeCertificateContext = crypt32.getFunction("CertFreeCertificateContext");
 	public final static Function CertCloseStore = crypt32.getFunction("CertCloseStore");
 	public final static Function CertGetEnhancedKeyUsage = crypt32.getFunction("CertGetEnhancedKeyUsage");
+	public final static Function CertCreateCertificateContext = crypt32.getFunction("CertCreateCertificateContext");
 
 	public static HANDLE CertOpenSystemStore(int hprov, String szSubsystemProtocol) {
 		Object[] argsCertOpenSystemStore = new Object[] { hprov, szSubsystemProtocol };
@@ -70,5 +71,12 @@ public class Crypt32NativeFunctions {
 				argsCertGetEnhancedKeyUsage);
 
 		return result.booleanValue();
+	}
+
+	public static CERT_CONTEXT CertCreateCertificateContext(int dwCertEncodingType, byte[] pbCertEncoded,
+			int cbCertEncoded) {
+		Object[] argsCertGetEnhancedKeyUsage = new Object[] { dwCertEncodingType, pbCertEncoded, cbCertEncoded };
+		return (CERT_CONTEXT) Crypt32NativeFunctions.CertCreateCertificateContext.invoke(CERT_CONTEXT.class,
+				argsCertGetEnhancedKeyUsage);
 	}
 }
