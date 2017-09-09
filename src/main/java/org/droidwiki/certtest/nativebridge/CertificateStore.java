@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.droidwiki.certtest.nativebridge.filter.CertificateFilter;
 import org.droidwiki.certtest.natives.Crypt32NativeFunctions;
 import org.droidwiki.certtest.structures.CERT_CONTEXT;
 
@@ -103,6 +104,59 @@ public class CertificateStore extends AbstractNativeObject implements Iterable<C
 	public Iterator<Certificate> iterator() {
 		checkFreed();
 		return getCertificatesInStore().iterator();
+	}
+
+	public static class Copy {
+		private List<CertificateFilter> filters = new ArrayList<>();
+
+		public Copy() {
+		}
+
+		/**
+		 * Adds a filter to this instance which will be used to filter the list
+		 * of certificates that will be copied by
+		 * {@link #copyOf(CertificateStore)}. All filters are connected with
+		 * AND, so that one certificate must pass all filters to be included in
+		 * the new created store.
+		 * 
+		 * @param filter
+		 * @return
+		 */
+		public Copy addFilter(CertificateFilter filter) {
+			filters.add(filter);
+
+			return this;
+		}
+
+		/**
+		 * Iterates over all certificates of the passed
+		 * {@link CertificateStore}, which should be an already populated
+		 * certificate store, and links these certificates to a newly created
+		 * temporary certificate store.
+		 * 
+		 * THis method also filters the certificate of the passed
+		 * {@link CertificateStore} by all {@link CertificateFilter} passed to
+		 * it by the {@link #addFilter(CertificateFilter)} method.
+		 * 
+		 * @param store
+		 */
+		public CertificateStore copyOf(CertificateStore store) {
+			CertificateStore newStore = CertificateStore.newCachedCertStore();
+
+			store.forEach(certificate -> {
+				boolean include = true;
+				for (CertificateFilter filter : filters) {
+					if (!filter.accept(certificate))
+						include = false;
+				}
+
+				if (include) {
+					newStore.addCertificateToStore(certificate);
+				}
+			});
+
+			return newStore;
+		}
 	}
 
 }

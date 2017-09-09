@@ -6,10 +6,12 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.util.List;
+import java.util.Arrays;
 
 import org.droidwiki.certtest.nativebridge.Certificate;
 import org.droidwiki.certtest.nativebridge.CertificateStore;
+import org.droidwiki.certtest.nativebridge.filter.ExtendedKeyUsageFilter;
+import org.droidwiki.certtest.nativebridge.filter.KeyUsageFilter;
 import org.droidwiki.certtest.natives.CryptUINativeFunctions;
 import org.droidwiki.certtest.natives.Kernel32NativeFunctions;
 import org.droidwiki.certtest.structures.CERT_CONTEXT;
@@ -28,7 +30,30 @@ public class App {
 		logger.debug("Initializing native objects");
 		CertificateStore mySystemStore = CertificateStore.getMySystemCertStore();
 		CertificateStore temporaryStore = CertificateStore.newCachedCertStore();
-		fillTemporaryCertStore(mySystemStore, temporaryStore);
+		CertificateStore.Copy copier = new CertificateStore.Copy();
+		/**
+		 * Filter the certificates based on the following criteria, which a
+		 * certificate need to fulfill to be used as a client login certificate:
+		 * 
+		 * <ul>
+		 * <li>Needs to have at least the keyUsage
+		 * {@link KeyUsage#digitalSignature}</li>
+		 * <li>Needs one of the following OIDs in the Extended Key Usage
+		 * extension:
+		 * {@link CertificateConstants.ExtendedKeyUsage#SmartcardLogon}</li>
+		 * </ul>
+		 * 
+		 * That the certificate needs a private key (e.g. checked with the
+		 * CryptAcquireCertificatePrivateKey native method) is explicitly not a
+		 * requirement for a certificate ending up in the temporary certificate
+		 * store. Checking this beforehand may result in a CSP requesting a hard
+		 * token or password to open the private key, if that is required by the
+		 * certificate iterated over in the system certificate store.
+		 */
+		copier.addFilter(new KeyUsageFilter(Arrays.asList(new KeyUsage[] { KeyUsage.digitalSignature })))
+				.addFilter(new ExtendedKeyUsageFilter(
+						Arrays.asList(new String[] { CertificateConstants.ExtendedKeyUsage.SmartcardLogon })));
+		temporaryStore = copier.copyOf(mySystemStore);
 		logger.debug("Prompting the user to select a certificate");
 		Certificate selectedCertContext = selectCertificateWithDialog(temporaryStore);
 		if (selectedCertContext == null) {
@@ -93,44 +118,5 @@ public class App {
 			return null;
 		}
 		return new Certificate(selectedCertContext);
-	}
-
-	/**
-	 * Iterates over all certificates of the passed HANDLE mySystemStore, which
-	 * should be an already populated certificate store, and links these
-	 * certificates to the temporary certificate store.
-	 * 
-	 * This method filters the certificate based on the following criteria,
-	 * which a certificate need to fulfill to be used as a client login
-	 * certificate:
-	 * 
-	 * <ul>
-	 * <li>Needs to have at least the keyUsage
-	 * {@link KeyUsage#digitalSignature}</li>
-	 * <li>Needs one of the following OIDs in the Extended Key Usage extension:
-	 * {@link CertificateConstants.ExtendedKeyUsage#SmartcardLogon}</li>
-	 * </ul>
-	 * 
-	 * That the certificate needs a private key (e.g. checked with the
-	 * CryptAcquireCertificatePrivateKey native method) is explicitly not a
-	 * requirement for a certificate ending up in the temporary certificate
-	 * store. Checking this beforehand may result in a CSP requesting a hard
-	 * token or password to open the private key, if that is required by the
-	 * certificate iterated over in the system certificate store.
-	 * 
-	 * @param mySystemStore
-	 * @param temporaryStore
-	 */
-	private void fillTemporaryCertStore(CertificateStore mySystemStore, CertificateStore temporaryStore) {
-		mySystemStore.forEach(certificate -> {
-			List<KeyUsage> kuList = certificate.getKeyUsage();
-			List<String> ekuList = certificate.getExtendedKeyUsages();
-			boolean kuOk = !kuList.isEmpty() && kuList.contains(KeyUsage.digitalSignature);
-			boolean ekuOk = !ekuList.isEmpty()
-					&& (ekuList.contains(CertificateConstants.ExtendedKeyUsage.SmartcardLogon));
-			if (ekuOk && kuOk) {
-				temporaryStore.addCertificateToStore(certificate);
-			}
-		});
 	}
 }
