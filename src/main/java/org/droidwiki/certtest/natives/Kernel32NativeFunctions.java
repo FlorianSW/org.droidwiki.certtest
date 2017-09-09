@@ -7,4 +7,8 @@ public class Kernel32NativeFunctions {
 	private final static NativeLibrary kernel32 = NativeLibrary.getInstance("Kernel32");
 
 	public final static Function GetLastError = kernel32.getFunction("GetLastError");
+
+	public static int GetLastError() {
+		return Kernel32NativeFunctions.GetLastError.invokeInt(null);
+	}
 }

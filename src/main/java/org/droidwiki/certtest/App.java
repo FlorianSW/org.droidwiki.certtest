@@ -18,6 +18,8 @@ import org.droidwiki.certtest.structures.CERT_CONTEXT;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sun.jna.platform.win32.WinNT.HANDLE;
+
 public class App {
 	private final Logger logger = LoggerFactory.getLogger(App.class);
 
@@ -103,15 +105,12 @@ public class App {
 	 * @return
 	 */
 	private Certificate selectCertificateWithDialog(CertificateStore temporaryStore) {
-		Object[] argsCryptUIDlgSelectCertificateFromStore = new Object[] { temporaryStore.getNative(), null, null, null,
-				0, 0, null };
 		CERT_CONTEXT selectedCertContext;
 		try {
-			selectedCertContext = (CERT_CONTEXT) CryptUINativeFunctions.CryptUIDlgSelectCertificateFromStore
-					.invoke(CERT_CONTEXT.class, argsCryptUIDlgSelectCertificateFromStore);
+			selectedCertContext = (CERT_CONTEXT) CryptUINativeFunctions.CryptUIDlgSelectCertificateFromStore(
+					(HANDLE) temporaryStore.getNative(), null, null, null, 0, 0, 0);
 		} catch (Error err) {
-			int error = Kernel32NativeFunctions.GetLastError.invokeInt(null);
-			System.out.println(error);
+			System.out.println(Kernel32NativeFunctions.GetLastError());
 			return null;
 		}
 		if (selectedCertContext == null) {
