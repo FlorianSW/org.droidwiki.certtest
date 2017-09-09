@@ -10,7 +10,7 @@ import java.util.Objects;
 
 import org.droidwiki.certtest.CertificateConstants;
 import org.droidwiki.certtest.KeyUsage;
-import org.droidwiki.certtest.natives.Crypt32NativeFunctions;
+import org.droidwiki.certtest.natives.Crypt32Library;
 import org.droidwiki.certtest.structures.CERT_CONTEXT;
 import org.droidwiki.certtest.structures.CTL_USAGE;
 import org.slf4j.Logger;
@@ -59,7 +59,8 @@ public class Certificate extends AbstractNativeObject {
 	public String getAlias() {
 		checkFreed();
 		char[] ptrName = new char[128];
-		return Crypt32NativeFunctions.CertGetNameStringW(certContext, 5, 0, 0, ptrName, 128);
+		Crypt32Library.INSTANCE.CertGetNameStringW(certContext, 5, 0, 0, ptrName, 128);
+		return new String(ptrName);
 	}
 
 	/**
@@ -140,7 +141,7 @@ public class Certificate extends AbstractNativeObject {
 		Objects.requireNonNull(certContext);
 		List<String> extendedKeyUsages = new ArrayList<>();
 		DWORDByReference lengthCertGetEnhancedKeyUsage = new DWORDByReference();
-		boolean result = Crypt32NativeFunctions.CertGetEnhancedKeyUsage(certContext, 0, null,
+		boolean result = Crypt32Library.INSTANCE.CertGetEnhancedKeyUsage(certContext, 0, null,
 				lengthCertGetEnhancedKeyUsage);
 		if (!result) {
 			return extendedKeyUsages;
@@ -149,7 +150,7 @@ public class Certificate extends AbstractNativeObject {
 				+ lengthCertGetEnhancedKeyUsage.getValue());
 
 		CTL_USAGE data = new CTL_USAGE();
-		result = Crypt32NativeFunctions.CertGetEnhancedKeyUsage(certContext, 0, data, lengthCertGetEnhancedKeyUsage);
+		result = Crypt32Library.INSTANCE.CertGetEnhancedKeyUsage(certContext, 0, data, lengthCertGetEnhancedKeyUsage);
 		for (Pointer pointer : data.rgpszUsageIdentifier) {
 			try {
 				String ekuOid = pointer.getString(0);
@@ -179,7 +180,7 @@ public class Certificate extends AbstractNativeObject {
 	@Override
 	public void free() {
 		super.free();
-		Crypt32NativeFunctions.CertFreeCertificateContext(certContext);
+		Crypt32Library.INSTANCE.CertFreeCertificateContext(certContext);
 	}
 
 }

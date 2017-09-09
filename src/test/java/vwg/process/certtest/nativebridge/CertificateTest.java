@@ -7,29 +7,34 @@ import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 
 import org.droidwiki.certtest.nativebridge.Certificate;
-import org.droidwiki.certtest.natives.Crypt32NativeFunctions;
+import org.droidwiki.certtest.natives.Crypt32Library;
 import org.droidwiki.certtest.structures.CERT_CONTEXT;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.powermock.reflect.Whitebox;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(Crypt32NativeFunctions.class)
+@PrepareForTest(Crypt32Library.class)
 public class CertificateTest {
 	private static final String expectedExceptionMessage = "This instance of " + Certificate.class.getName()
 			+ " has already been freed.";
+
+	@Mock
+	Crypt32Library fakeSingletonInstance;
 
 	private Certificate testCertificate;
 	private Certificate freedTestCertificate;
 
 	@Before
 	public void setUp() throws Exception {
-		PowerMockito.mockStatic(Crypt32NativeFunctions.class);
+		Whitebox.setInternalState(Crypt32Library.class, "INSTANCE", fakeSingletonInstance);
+		PowerMockito.doNothing().when(fakeSingletonInstance, "CertFreeCertificateContext", any());
 
-		PowerMockito.doNothing().when(Crypt32NativeFunctions.class, "CertFreeCertificateContext", any());
 		testCertificate = new Certificate(new CERT_CONTEXT());
 		freedTestCertificate = new Certificate(new CERT_CONTEXT());
 		freedTestCertificate.free();

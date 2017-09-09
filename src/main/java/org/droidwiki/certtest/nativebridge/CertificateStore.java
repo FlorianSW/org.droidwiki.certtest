@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.droidwiki.certtest.nativebridge.filter.CertificateFilter;
-import org.droidwiki.certtest.natives.Crypt32NativeFunctions;
+import org.droidwiki.certtest.natives.Crypt32Library;
 import org.droidwiki.certtest.structures.CERT_CONTEXT;
 
 import com.sun.jna.platform.win32.WinNT.HANDLE;
@@ -25,7 +25,7 @@ public class CertificateStore extends AbstractNativeObject implements Iterable<C
 	 * @return
 	 */
 	public static CertificateStore getMySystemCertStore() {
-		return new CertificateStore(Crypt32NativeFunctions.CertOpenSystemStore(0, "MY"));
+		return new CertificateStore(Crypt32Library.INSTANCE.CertOpenSystemStoreA(0, "MY"));
 	}
 
 	/**
@@ -37,7 +37,7 @@ public class CertificateStore extends AbstractNativeObject implements Iterable<C
 	 * @return
 	 */
 	public static CertificateStore newCachedCertStore() {
-		return new CertificateStore(Crypt32NativeFunctions.CertOpenStore(2, 0, 0, 0, 0));
+		return new CertificateStore(Crypt32Library.INSTANCE.CertOpenStore(2, 0, 0, 0, 0));
 	}
 
 	/**
@@ -49,7 +49,7 @@ public class CertificateStore extends AbstractNativeObject implements Iterable<C
 		checkFreed();
 		List<Certificate> certContextList = new ArrayList<>();
 		forEach(certContext -> {
-			CERT_CONTEXT newCertContext = Crypt32NativeFunctions.CertCreateCertificateContext(1,
+			CERT_CONTEXT newCertContext = Crypt32Library.INSTANCE.CertCreateCertificateContext(1,
 					certContext.getEncodedByteArray(), certContext.getEncodedLength());
 			certContextList.add(new Certificate(newCertContext));
 		});
@@ -70,14 +70,14 @@ public class CertificateStore extends AbstractNativeObject implements Iterable<C
 	 */
 	public void addCertificateToStore(Certificate certificate) {
 		checkFreed();
-		Crypt32NativeFunctions.CertAddCertificateLinkToStore(storeHandle, (CERT_CONTEXT) certificate.getNative(), 3,
+		Crypt32Library.INSTANCE.CertAddCertificateLinkToStore(storeHandle, (CERT_CONTEXT) certificate.getNative(), 3,
 				null);
 	}
 
 	@Override
 	public void free() {
 		super.free();
-		Crypt32NativeFunctions.CertCloseStore(storeHandle, 0);
+		Crypt32Library.INSTANCE.CertCloseStore(storeHandle, 0);
 	}
 
 	/**
@@ -93,10 +93,10 @@ public class CertificateStore extends AbstractNativeObject implements Iterable<C
 	@Override
 	public void forEach(Consumer<? super Certificate> action) {
 		checkFreed();
-		CERT_CONTEXT toTestCert = Crypt32NativeFunctions.CertEnumCertificatesInStore(storeHandle, null);
+		CERT_CONTEXT toTestCert = Crypt32Library.INSTANCE.CertEnumCertificatesInStore(storeHandle, null);
 		do {
 			action.accept(new Certificate(toTestCert));
-			toTestCert = Crypt32NativeFunctions.CertEnumCertificatesInStore(storeHandle, toTestCert);
+			toTestCert = Crypt32Library.INSTANCE.CertEnumCertificatesInStore(storeHandle, toTestCert);
 		} while (toTestCert != null);
 	}
 

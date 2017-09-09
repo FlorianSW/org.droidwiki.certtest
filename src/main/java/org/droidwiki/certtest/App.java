@@ -12,8 +12,8 @@ import org.droidwiki.certtest.nativebridge.Certificate;
 import org.droidwiki.certtest.nativebridge.CertificateStore;
 import org.droidwiki.certtest.nativebridge.filter.ExtendedKeyUsageFilter;
 import org.droidwiki.certtest.nativebridge.filter.KeyUsageFilter;
-import org.droidwiki.certtest.natives.CryptUINativeFunctions;
-import org.droidwiki.certtest.natives.Kernel32NativeFunctions;
+import org.droidwiki.certtest.natives.CryptUILibrary;
+import org.droidwiki.certtest.natives.Kernel32Library;
 import org.droidwiki.certtest.structures.CERT_CONTEXT;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,10 +107,10 @@ public class App {
 	private Certificate selectCertificateWithDialog(CertificateStore temporaryStore) {
 		CERT_CONTEXT selectedCertContext;
 		try {
-			selectedCertContext = (CERT_CONTEXT) CryptUINativeFunctions.CryptUIDlgSelectCertificateFromStore(
+			selectedCertContext = CryptUILibrary.INSTANCE.CryptUIDlgSelectCertificateFromStore(
 					(HANDLE) temporaryStore.getNative(), null, null, null, 0, 0, 0);
 		} catch (Error err) {
-			System.out.println(Kernel32NativeFunctions.GetLastError());
+			System.out.println(Kernel32Library.INSTANCE.GetLastError());
 			return null;
 		}
 		if (selectedCertContext == null) {
