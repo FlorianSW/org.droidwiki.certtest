@@ -100,6 +100,7 @@ public class Certificate extends AbstractNativeObject {
 	 * @return
 	 */
 	public List<KeyUsage> getKeyUsage() {
+		checkFreed();
 		List<KeyUsage> keyUsagesList = new ArrayList<>();
 		// if the certificate can not be encoded, return an empty list
 		if (certContext.pbCertEncoded == null || certContext.cbCertEncoded == 0) {
@@ -135,6 +136,7 @@ public class Certificate extends AbstractNativeObject {
 	 * @return
 	 */
 	public List<String> getExtendedKeyUsages() {
+		checkFreed();
 		Objects.requireNonNull(certContext);
 		List<String> extendedKeyUsages = new ArrayList<>();
 		DWORDByReference lengthCertGetEnhancedKeyUsage = new DWORDByReference();
@@ -170,6 +172,7 @@ public class Certificate extends AbstractNativeObject {
 
 	@Override
 	public Object getNative() {
+		checkFreed();
 		return certContext;
 	}
 
