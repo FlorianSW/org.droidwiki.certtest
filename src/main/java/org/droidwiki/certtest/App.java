@@ -61,7 +61,7 @@ public class App {
 			ks.setCertificateEntry(certificateAlias, cert);
 			logger.info("The public key of the selected certificate is: {}", cert.getPublicKey());
 		} catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
-			e.printStackTrace();
+			logger.error("Could not initialize a new keystore.", e);
 		}
 
 	}
@@ -87,6 +87,9 @@ public class App {
 		} catch (Error err) {
 			int error = Kernel32NativeFunctions.GetLastError.invokeInt(null);
 			System.out.println(error);
+			return null;
+		}
+		if (selectedCertContext == null) {
 			return null;
 		}
 		return new Certificate(selectedCertContext);
