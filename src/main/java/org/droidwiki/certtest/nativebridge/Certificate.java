@@ -112,6 +112,9 @@ public class Certificate extends AbstractNativeObject {
 			// access to the KeyUsage extension
 			X509Certificate cert = getX509Certificate();
 			boolean[] certKeyUsages = cert.getKeyUsage();
+			if (certKeyUsages == null) {
+				return keyUsagesList;
+			}
 			for (int i = 0; i < KeyUsage.values().length; i++) {
 				KeyUsage usage = KeyUsage.values()[i];
 				if (certKeyUsages[i]) {
